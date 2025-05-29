@@ -1,31 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Signup</title>
+  <title>Signup & Login</title>
   <style>
     body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
-    form { background: white; padding: 20px; max-width: 300px; margin: auto; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    form { background: white; padding: 20px; max-width: 300px; margin: 20px auto; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     input, button { width: 100%; padding: 10px; margin: 10px 0; }
     .error { color: red; }
+    .success { color: green; }
+    h2 { text-align: center; }
   </style>
 </head>
 <body>
 
+  <!-- Signup Form -->
   <form id="signupForm">
     <h2>Sign Up</h2>
-    <input type="text" id="username" placeholder="Username" maxlength="20" required>
-    <input type="password" id="password" placeholder="Password" required>
+    <input type="text" id="signupUsername" placeholder="Username" maxlength="20" required>
+    <input type="password" id="signupPassword" placeholder="Password" required>
     <button type="submit">Sign Up</button>
-    <p class="error" id="error"></p>
-    <p id="success"></p>
+    <p class="error" id="signupError"></p>
+    <p class="success" id="signupSuccess"></p>
+  </form>
+
+  <!-- Login Form -->
+  <form id="loginForm">
+    <h2>Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username" maxlength="20" required>
+    <input type="password" id="loginPassword" placeholder="Password" required>
+    <button type="submit">Login</button>
+    <p class="error" id="loginError"></p>
+    <p class="success" id="loginSuccess"></p>
   </form>
 
   <script type="module">
     // Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
-    // Firebase config (fixed bucket)
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBhHOQUZKAoEfEbdy2hiD8PazE-i-qbY2g",
       authDomain: "cardgameproject-42b48.firebaseapp.com",
@@ -39,45 +52,74 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // DOM
-    const form = document.getElementById("signupForm");
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
-    const errorEl = document.getElementById("error");
-    const successEl = document.getElementById("success");
-
     function sanitizeInput(str) {
       const pattern = /[<>\/"'`;={}]/g;
       return !pattern.test(str);
     }
 
-    form.addEventListener("submit", async (e) => {
+    // Sign Up Logic
+    const signupForm = document.getElementById("signupForm");
+    const signupUsername = document.getElementById("signupUsername");
+    const signupPassword = document.getElementById("signupPassword");
+    const signupError = document.getElementById("signupError");
+    const signupSuccess = document.getElementById("signupSuccess");
+
+    signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      errorEl.textContent = "";
-      successEl.textContent = "";
+      signupError.textContent = "";
+      signupSuccess.textContent = "";
 
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value;
+      const username = signupUsername.value.trim();
+      const password = signupPassword.value;
 
-      // Validation
       if (!sanitizeInput(username) || !sanitizeInput(password)) {
-        errorEl.textContent = "Invalid characters in input.";
+        signupError.textContent = "Invalid characters in input.";
         return;
       }
       if (username.length < 3 || username.length > 20) {
-        errorEl.textContent = "Username must be 3–20 characters.";
+        signupError.textContent = "Username must be 3–20 characters.";
         return;
       }
 
-      // Trick: use "username@brickbugs.com" as email
-      const fakeEmail = `${username}@gmail.com`;
+      const email = `${username}@brickbugs.com`;
 
       try {
-        await createUserWithEmailAndPassword(auth, fakeEmail, password);
-        successEl.textContent = `Signed up as ${username}!`;
-        form.reset();
+        await createUserWithEmailAndPassword(auth, email, password);
+        signupSuccess.textContent = `Signed up as ${username}!`;
+        signupForm.reset();
       } catch (error) {
-        errorEl.textContent = error.message;
+        signupError.textContent = error.message;
+      }
+    });
+
+    // Login Logic
+    const loginForm = document.getElementById("loginForm");
+    const loginUsername = document.getElementById("loginUsername");
+    const loginPassword = document.getElementById("loginPassword");
+    const loginError = document.getElementById("loginError");
+    const loginSuccess = document.getElementById("loginSuccess");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginError.textContent = "";
+      loginSuccess.textContent = "";
+
+      const username = loginUsername.value.trim();
+      const password = loginPassword.value;
+
+      if (!sanitizeInput(username) || !sanitizeInput(password)) {
+        loginError.textContent = "Invalid characters in input.";
+        return;
+      }
+
+      const email = `${username}@brickbugs.com`;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        loginSuccess.textContent = `Logged in as ${username}!`;
+        loginForm.reset();
+      } catch (error) {
+        loginError.textContent = "Login failed: " + error.message;
       }
     });
   </script>
