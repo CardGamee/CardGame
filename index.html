@@ -3,109 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Schmucks Signup & Login</title>
+  <title>Schmucks Signup & Login (Firestore only)</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
-
-    body {
-      background-color: #fff;
-      font-family: 'Montserrat', sans-serif;
-      color: #222;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      justify-content: center;
-      align-items: center;
-    }
-
-    h1 {
-      font-weight: 700;
-      margin-bottom: 20px;
-      text-align: center;
-      color: #333;
-    }
-
-    form {
-      background: #f0f0f0;
-      border-radius: 12px;
-      padding: 30px 40px;
-      width: 320px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-      margin: 15px 0;
-    }
-
-    h2 {
-      font-weight: 700;
-      font-size: 24px;
-      margin-bottom: 18px;
-      text-align: center;
-      color: #444;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      margin: 10px 0 20px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      box-sizing: border-box;
-      outline: none;
-      transition: border-color 0.3s;
-    }
-
-    input:focus {
-      border-color: #007bff;
-    }
-
-    input::placeholder {
-      color: #999;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      box-shadow: 0 3px 8px rgba(0, 123, 255, 0.6);
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    .message {
-      text-align: center;
-      font-size: 14px;
-      margin-top: -15px;
-      margin-bottom: 10px;
-    }
-
-    .error {
-      color: #cc0000;
-      font-weight: 700;
-    }
-
-    .success {
-      color: #008800;
-      font-weight: 700;
-    }
-
-    /* Responsive */
-    @media (max-width: 400px) {
-      form {
-        width: 90vw;
-        padding: 20px;
-      }
-    }
+    /* your CSS here (same as before) */
   </style>
 </head>
 <body>
@@ -135,18 +35,13 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-    import {
       getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
       doc,
-      setDoc,
-      getDoc,
-      updateDoc,
-      increment
+      setDoc
     } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -159,18 +54,16 @@
       measurementId: "G-JRRFX47QY2"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Helper: sanitize input - no HTML or special chars allowed
+    // Helper sanitize
     function sanitizeInput(str) {
-      const pattern = /^[a-zA-Z0-9_-]{3,20}$/; // letters, numbers, _ and - only, 3-20 chars
+      const pattern = /^[a-zA-Z0-9_-]{3,20}$/;
       return pattern.test(str);
     }
 
-    // SIGNUP
+    // Signup form elements
     const signupForm = document.getElementById("signupForm");
     const signupUsername = document.getElementById("signupUsername");
     const signupPassword = document.getElementById("signupPassword");
@@ -194,17 +87,22 @@
         return;
       }
 
-      // Create a fake email using username so Firebase Auth works
-      const email = `${username.toLowerCase()}@schmucks.com`;
-
       try {
-        // Create user with email & password
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        // Check if username already exists
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("username", "==", username));
+        const querySnapshot = await getDocs(q);
 
-        // Create Firestore user doc
-        await setDoc(doc(db, "users", user.uid), {
+        if (!querySnapshot.empty) {
+          signupError.textContent = "Username already taken.";
+          return;
+        }
+
+        // Create user document
+        // Here doc id is auto-generated; you can also use username as doc id if you want uniqueness
+        await setDoc(doc(usersRef), {
           username: username,
+          password: password,  // <-- WARNING: storing plaintext password, insecure!
           coins: 0
         });
 
@@ -212,19 +110,17 @@
         signupForm.reset();
 
         setTimeout(() => {
+          // Save username in localStorage for login persistence & redirect
+          localStorage.setItem("schmucksUser", username);
           window.location.href = "home.html";
         }, 1500);
 
-      } catch (error) {
-        if (error.code === "auth/email-already-in-use") {
-          signupError.textContent = "Username already taken.";
-        } else {
-          signupError.textContent = error.message;
-        }
+      } catch (err) {
+        signupError.textContent = "Signup failed: " + err.message;
       }
     });
 
-    // LOGIN
+    // Login form elements
     const loginForm = document.getElementById("loginForm");
     const loginUsername = document.getElementById("loginUsername");
     const loginPassword = document.getElementById("loginPassword");
@@ -248,28 +144,46 @@
         return;
       }
 
-      const email = `${username.toLowerCase()}@schmucks.com`;
-
       try {
-        await signInWithEmailAndPassword(auth, email, password);
+        // Query user with username
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("username", "==", username));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          loginError.textContent = "User not found.";
+          return;
+        }
+
+        // Check password (plaintext)
+        let userDoc = null;
+        querySnapshot.forEach(docSnap => {
+          userDoc = docSnap;
+        });
+
+        if (userDoc.data().password !== password) {
+          loginError.textContent = "Incorrect password.";
+          return;
+        }
+
         loginSuccess.textContent = `Logged in as ${username}! Redirecting...`;
         loginForm.reset();
 
         setTimeout(() => {
+          // Save username to localStorage
+          localStorage.setItem("schmucksUser", username);
           window.location.href = "home.html";
         }, 1500);
 
-      } catch (error) {
-        loginError.textContent = "Login failed: " + error.message;
+      } catch (err) {
+        loginError.textContent = "Login failed: " + err.message;
       }
     });
 
-    // Redirect if already logged in (optional)
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        window.location.href = "home.html";
-      }
-    });
+    // Optional: redirect if user is "logged in" via localStorage
+    if (localStorage.getItem("schmucksUser")) {
+      window.location.href = "home.html";
+    }
   </script>
 
 </body>
