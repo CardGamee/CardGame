@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BrickBugs Signup & Login</title>
+  <title>Schmucks Signup & Login</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Comic+Neue&display=swap');
 
     body {
-      background-color: #00a862;
-      font-family: 'Comic Neue', cursive, Comic Sans MS, sans-serif;
-      color: white;
+      background-color: #fff; /* white background */
+      font-family: 'Comic Neue', Arial, sans-serif; /* mobile-friendly font */
+      color: #111; /* dark text */
       margin: 0;
       padding: 0;
       display: flex;
@@ -24,16 +24,18 @@
       font-weight: bold;
       margin-bottom: 20px;
       text-align: center;
-      text-shadow: 2px 2px #004d26;
+      color: #222;
+      text-shadow: none;
     }
 
     form {
-      background: #00c474;
+      background: #f7f7f7; /* light grey form background */
       border-radius: 12px;
       padding: 30px 40px;
       width: 320px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
       margin: 15px 0;
+      color: #111;
     }
 
     h2 {
@@ -41,28 +43,35 @@
       font-size: 24px;
       margin-bottom: 18px;
       text-align: center;
-      text-shadow: 1px 1px #004d26;
+      color: #222;
     }
 
     input {
       width: 100%;
       padding: 12px 14px;
       margin: 10px 0 20px 0;
-      border: none;
+      border: 1.5px solid #ccc;
       border-radius: 10px;
       font-size: 16px;
       box-sizing: border-box;
       outline: none;
+      color: #111;
+      background-color: #fff;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus {
+      border-color: #666;
     }
 
     input::placeholder {
-      color: #b3e6cc;
+      color: #aaa;
     }
 
     button {
       width: 100%;
       padding: 14px;
-      background-color: #007f44;
+      background-color: #333;
       color: white;
       border: none;
       border-radius: 12px;
@@ -70,11 +79,11 @@
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      box-shadow: 0 3px 8px #004d26;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
     }
 
     button:hover {
-      background-color: #005d2b;
+      background-color: #000;
     }
 
     .message {
@@ -85,15 +94,13 @@
     }
 
     .error {
-      color: #ffcccc;
+      color: #d93025; /* red */
       font-weight: 700;
-      text-shadow: 1px 1px #800000;
     }
 
     .success {
-      color: #ccffcc;
+      color: #188038; /* green */
       font-weight: 700;
-      text-shadow: 1px 1px #006600;
     }
 
     /* Responsive */
@@ -107,7 +114,7 @@
 </head>
 <body>
 
-  <h1>BrickBugs Account</h1>
+  <h1>Schmucks Account</h1>
 
   <!-- Signup Form -->
   <form id="signupForm" autocomplete="off" spellcheck="false" novalidate>
@@ -179,7 +186,7 @@
         return;
       }
 
-      const email = `${username}@brickbugs.com`;
+      const email = `${username}@schmucks.com`;
 
       try {
         await createUserWithEmailAndPassword(auth, email, password);
@@ -210,7 +217,7 @@
         return;
       }
 
-      const email = `${username}@gmail.com`;
+      const email = `${username}@schmucks.com`;
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
