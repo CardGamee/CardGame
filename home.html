@@ -6,7 +6,6 @@
   <title>Schmucks Home</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
-
     body {
       font-family: 'Montserrat', sans-serif;
       background-color: #fff;
@@ -18,7 +17,6 @@
       min-height: 100vh;
       align-items: center;
     }
-
     header {
       width: 100%;
       background: #007bff;
@@ -33,11 +31,9 @@
       font-size: 18px;
       user-select: none;
     }
-
     #usernameDisplay {
       white-space: nowrap;
     }
-
     #coinsDisplay {
       background: rgba(255 255 255 / 0.2);
       padding: 6px 14px;
@@ -48,12 +44,10 @@
       align-items: center;
       gap: 6px;
     }
-
     #coinsDisplay::before {
       content: "🪙";
       font-size: 20px;
     }
-
     main {
       flex: 1;
       padding: 40px 20px;
@@ -62,7 +56,6 @@
       max-width: 600px;
       margin: auto;
     }
-
     button#logoutBtn {
       background-color: #e03e3e;
       border: none;
@@ -76,6 +69,21 @@
     }
     button#logoutBtn:hover {
       background-color: #a72a2a;
+    }
+    button#addCoinsBtn {
+      margin-top: 20px;
+      padding: 10px 18px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    button#addCoinsBtn:hover {
+      background-color: #1e7e34;
     }
   </style>
 </head>
@@ -91,19 +99,17 @@
     <h1>Welcome to Schmucks!</h1>
     <p>Your account details are shown above.</p>
     <p>Enjoy your coins and have fun!</p>
+    <button id="addCoinsBtn">Add 10 Coins</button>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import {
-      getAuth,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-    import {
       getFirestore,
       doc,
-      getDoc
+      getDoc,
+      updateDoc,
+      increment
     } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -117,36 +123,60 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
 
     const usernameDisplay = document.getElementById("usernameDisplay");
     const coinsDisplay = document.getElementById("coinsDisplay");
     const logoutBtn = document.getElementById("logoutBtn");
+    const addCoinsBtn = document.getElementById("addCoinsBtn");
 
-    // Redirect to login page if no user
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "index.html";
-        return;
-      }
-      // Get user data from Firestore
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        usernameDisplay.textContent = userData.username || "Unknown User";
-        coinsDisplay.textContent = userData.coins ?? 0;
-      } else {
-        usernameDisplay.textContent = "Unknown User";
-        coinsDisplay.textContent = 0;
-      }
-    });
+    // Get userId from localStorage (set during signup/login)
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      // No user stored, redirect to login/signup page
+      window.location.href = "index.html";
+    }
 
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
+    async function loadUserData() {
+      try {
+        const userDocRef = doc(db, "users", userId);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          usernameDisplay.textContent = userData.username || "Unknown User";
+          coinsDisplay.textContent = userData.coins ?? 0;
+        } else {
+          usernameDisplay.textContent = "Unknown User";
+          coinsDisplay.textContent = 0;
+        }
+      } catch (err) {
+        console.error("Error loading user data:", err);
+        usernameDisplay.textContent = "Error loading user";
+      }
+    }
+
+    async function addCoins(amount) {
+      try {
+        const userDocRef = doc(db, "users", userId);
+        await updateDoc(userDocRef, {
+          coins: increment(amount)
+        });
+        await loadUserData(); // Refresh UI
+      } catch (err) {
+        console.error("Error adding coins:", err);
+      }
+    }
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("userId"); // Clear local user
       window.location.href = "index.html";
     });
+
+    addCoinsBtn.addEventListener("click", () => {
+      addCoins(10);
+    });
+
+    loadUserData();
   </script>
 </body>
 </html>
