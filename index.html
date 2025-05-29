@@ -5,67 +5,107 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Schmucks Signup & Login</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
     body {
       background-color: #fff;
-      font-family: 'Arial', sans-serif;
-      color: #000;
-      margin: 0; padding: 0;
+      font-family: 'Poppins', sans-serif;
+      color: black;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
       justify-content: center;
       align-items: center;
     }
+
+    h1 {
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 1px 1px #ccc;
+      color: #333;
+    }
+
     form {
-      background: #007f44;
+      background: #eee;
       border-radius: 12px;
       padding: 30px 40px;
       width: 320px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
       margin: 15px 0;
-      color: white;
     }
+
+    h2 {
+      font-weight: 600;
+      font-size: 24px;
+      margin-bottom: 18px;
+      text-align: center;
+      color: #222;
+    }
+
     input {
       width: 100%;
-      padding: 12px;
+      padding: 12px 14px;
       margin: 10px 0 20px 0;
-      border: none;
+      border: 1px solid #ccc;
       border-radius: 10px;
       font-size: 16px;
       box-sizing: border-box;
       outline: none;
+      transition: border-color 0.3s;
     }
+
+    input:focus {
+      border-color: #007bff;
+    }
+
+    input::placeholder {
+      color: #999;
+    }
+
     button {
       width: 100%;
       padding: 14px;
-      background-color: #005d2b;
+      background-color: #007bff;
       color: white;
       border: none;
       border-radius: 12px;
       font-size: 18px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      box-shadow: 0 3px 8px #004d26;
+      box-shadow: 0 3px 8px rgba(0, 123, 255, 0.4);
     }
+
     button:hover {
-      background-color: #004419;
+      background-color: #0056b3;
     }
+
     .message {
       text-align: center;
       font-size: 14px;
       margin-top: -15px;
       margin-bottom: 10px;
     }
+
     .error {
-      color: #ffcccc;
+      color: #d9534f;
       font-weight: 700;
-      text-shadow: 1px 1px #800000;
     }
+
     .success {
-      color: #ccffcc;
+      color: #28a745;
       font-weight: 700;
-      text-shadow: 1px 1px #006600;
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      form {
+        width: 90vw;
+        padding: 20px;
+      }
     }
   </style>
 </head>
@@ -73,15 +113,17 @@
 
   <h1>Schmucks Account</h1>
 
+  <!-- Signup Form -->
   <form id="signupForm" autocomplete="off" spellcheck="false" novalidate>
     <h2>Create Account</h2>
-    <input type="text" id="signupUsername" placeholder="Username (3-20 chars)" maxlength="20" required />
-    <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" minlength="6" required />
+    <input type="text" id="signupUsername" placeholder="Username" maxlength="20" required />
+    <input type="password" id="signupPassword" placeholder="Password" required />
     <button type="submit">Sign Up</button>
     <p class="message error" id="signupError"></p>
     <p class="message success" id="signupSuccess"></p>
   </form>
 
+  <!-- Login Form -->
   <form id="loginForm" autocomplete="off" spellcheck="false" novalidate>
     <h2>Login</h2>
     <input type="text" id="loginUsername" placeholder="Username" maxlength="20" required />
@@ -113,17 +155,8 @@
     const auth = getAuth(app);
 
     function sanitizeInput(str) {
-      // disallow < > / " ' ` ; = { }
-      const pattern = /[<>\/"'`;={}]/;
+      const pattern = /[<>\/"'`;={}]/g;
       return !pattern.test(str);
-    }
-
-    function validateUsername(name) {
-      return typeof name === "string" && name.length >= 3 && name.length <= 20 && sanitizeInput(name);
-    }
-
-    function validatePassword(pwd) {
-      return typeof pwd === "string" && pwd.length >= 6 && sanitizeInput(pwd);
     }
 
     // SIGNUP
@@ -141,12 +174,12 @@
       const username = signupUsername.value.trim();
       const password = signupPassword.value;
 
-      if (!validateUsername(username)) {
-        signupError.textContent = "Username must be 3-20 chars, no special code.";
+      if (!sanitizeInput(username) || !sanitizeInput(password)) {
+        signupError.textContent = "Invalid characters in input.";
         return;
       }
-      if (!validatePassword(password)) {
-        signupError.textContent = "Password must be 6+ chars, no special code.";
+      if (username.length < 3 || username.length > 20) {
+        signupError.textContent = "Username must be 3–20 characters.";
         return;
       }
 
@@ -154,20 +187,12 @@
 
       try {
         await createUserWithEmailAndPassword(auth, email, password);
-        signupSuccess.textContent = `Signed up as ${username}! You may now log in.`;
+        signupSuccess.textContent = `Signed up as ${username}! Redirecting...`;
         signupForm.reset();
+        // Redirect on success
+        window.location.href = "home.html";
       } catch (error) {
-        // Friendly error messages
-        let msg = "Signup failed. Try again.";
-        if (error.code === "auth/email-already-in-use") {
-          msg = "Username is already taken.";
-        } else if (error.code === "auth/weak-password") {
-          msg = "Password too weak.";
-        } else if (error.code === "auth/invalid-email") {
-          msg = "Invalid username format.";
-        }
-        signupError.textContent = msg;
-        console.error("Signup error:", error);
+        signupError.textContent = error.message;
       }
     });
 
@@ -186,12 +211,8 @@
       const username = loginUsername.value.trim();
       const password = loginPassword.value;
 
-      if (!validateUsername(username)) {
-        loginError.textContent = "Invalid username format.";
-        return;
-      }
-      if (!validatePassword(password)) {
-        loginError.textContent = "Invalid password format.";
+      if (!sanitizeInput(username) || !sanitizeInput(password)) {
+        loginError.textContent = "Invalid characters in input.";
         return;
       }
 
@@ -199,19 +220,12 @@
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        loginSuccess.textContent = `Logged in as ${username}!`;
+        loginSuccess.textContent = `Logged in as ${username}! Redirecting...`;
         loginForm.reset();
+        // Redirect on success
+        window.location.href = "home.html";
       } catch (error) {
-        let msg = "Login failed. Please check username/password.";
-        if (error.code === "auth/user-not-found") {
-          msg = "User not found.";
-        } else if (error.code === "auth/wrong-password") {
-          msg = "Incorrect password.";
-        } else if (error.code === "auth/invalid-email") {
-          msg = "Invalid username format.";
-        }
-        loginError.textContent = msg;
-        console.error("Login error:", error);
+        loginError.textContent = "Login failed: " + error.message;
       }
     });
   </script>
