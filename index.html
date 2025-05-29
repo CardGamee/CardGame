@@ -1,110 +1,83 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Signup</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 40px;
-    }
-    form {
-      max-width: 400px;
-      margin: auto;
-    }
-    input, button {
-      display: block;
-      margin: 10px 0;
-      padding: 10px;
-      width: 100%;
-    }
-    #status {
-      margin-top: 10px;
-      color: red;
-    }
+    body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
+    form { background: white; padding: 20px; max-width: 300px; margin: auto; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, button { width: 100%; padding: 10px; margin: 10px 0; }
+    .error { color: red; }
   </style>
 </head>
 <body>
-  <h2>Create Account</h2>
+
   <form id="signupForm">
-    <input type="text" id="username" placeholder="Username (3–16 chars)" maxlength="16" required />
-    <input type="password" id="password" placeholder="Password (min 6 chars)" required />
+    <h2>Sign Up</h2>
+    <input type="text" id="username" placeholder="Username" maxlength="20" required>
+    <input type="password" id="password" placeholder="Password" required>
     <button type="submit">Sign Up</button>
-    <p id="status"></p>
+    <p class="error" id="error"></p>
+    <p id="success"></p>
   </form>
 
-  <!-- Firebase SDKs -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
+    // Firebase config (fixed bucket)
     const firebaseConfig = {
       apiKey: "AIzaSyBhHOQUZKAoEfEbdy2hiD8PazE-i-qbY2g",
       authDomain: "cardgameproject-42b48.firebaseapp.com",
       projectId: "cardgameproject-42b48",
-      storageBucket: "cardgameproject-42b48.appspot.com"
-
+      storageBucket: "cardgameproject-42b48.appspot.com",
       messagingSenderId: "138581020577",
       appId: "1:138581020577:web:0e24b22595992c9a2685e0",
       measurementId: "G-JRRFX47QY2"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth(app);
-    const db = getFirestore(app);
 
-    const signupForm = document.getElementById("signupForm");
-    const statusText = document.getElementById("status");
+    // DOM
+    const form = document.getElementById("signupForm");
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const errorEl = document.getElementById("error");
+    const successEl = document.getElementById("success");
 
-    // Sanitize input to block HTML/code
-    function sanitize(input) {
-      const pattern = /^[a-zA-Z0-9_]+$/; // Allow only letters, numbers, and underscores
-      return pattern.test(input);
+    function sanitizeInput(str) {
+      const pattern = /[<>\/"'`;={}]/g;
+      return !pattern.test(str);
     }
 
-    signupForm.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
+      errorEl.textContent = "";
+      successEl.textContent = "";
 
-      // Validate username
-      if (!username || username.length < 3 || username.length > 16) {
-        statusText.textContent = "Username must be 3–16 characters.";
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      // Validation
+      if (!sanitizeInput(username) || !sanitizeInput(password)) {
+        errorEl.textContent = "Invalid characters in input.";
         return;
       }
-      if (!sanitize(username)) {
-        statusText.textContent = "Username can only use letters, numbers, and underscores.";
-        return;
-      }
-
-      // Validate password
-      if (password.length < 6) {
-        statusText.textContent = "Password must be at least 6 characters.";
+      if (username.length < 3 || username.length > 20) {
+        errorEl.textContent = "Username must be 3–20 characters.";
         return;
       }
 
-      const fakeEmail = `${username}@fake-email.com`;
+      // Trick: use "username@brickbugs.com" as email
+      const fakeEmail = `${username}@gmail.com`;
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, password);
-        const user = userCredential.user;
-
-        await setDoc(doc(db, "users", user.uid), {
-          username: username,
-          createdAt: new Date()
-        });
-
-        statusText.style.color = "green";
-        statusText.textContent = "Account created successfully!";
-        signupForm.reset();
+        await createUserWithEmailAndPassword(auth, fakeEmail, password);
+        successEl.textContent = `Signed up as ${username}!`;
+        form.reset();
       } catch (error) {
-        statusText.style.color = "red";
-        statusText.textContent = "Error: " + error.message;
+        errorEl.textContent = error.message;
       }
     });
   </script>
