@@ -1,44 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Signup & Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BrickBugs Signup & Login</title>
   <style>
-    body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
-    form { background: white; padding: 20px; max-width: 300px; margin: 20px auto; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    input, button { width: 100%; padding: 10px; margin: 10px 0; }
-    .error { color: red; }
-    .success { color: green; }
-    h2 { text-align: center; }
+    @import url('https://fonts.googleapis.com/css2?family=Comic+Neue&display=swap');
+
+    body {
+      background-color: #00a862;
+      font-family: 'Comic Neue', cursive, Comic Sans MS, sans-serif;
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    h1 {
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 2px 2px #004d26;
+    }
+
+    form {
+      background: #00c474;
+      border-radius: 12px;
+      padding: 30px 40px;
+      width: 320px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      margin: 15px 0;
+    }
+
+    h2 {
+      font-weight: bold;
+      font-size: 24px;
+      margin-bottom: 18px;
+      text-align: center;
+      text-shadow: 1px 1px #004d26;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      margin: 10px 0 20px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #b3e6cc;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #007f44;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 3px 8px #004d26;
+    }
+
+    button:hover {
+      background-color: #005d2b;
+    }
+
+    .message {
+      text-align: center;
+      font-size: 14px;
+      margin-top: -15px;
+      margin-bottom: 10px;
+    }
+
+    .error {
+      color: #ffcccc;
+      font-weight: 700;
+      text-shadow: 1px 1px #800000;
+    }
+
+    .success {
+      color: #ccffcc;
+      font-weight: 700;
+      text-shadow: 1px 1px #006600;
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      form {
+        width: 90vw;
+        padding: 20px;
+      }
+    }
   </style>
 </head>
 <body>
 
+  <h1>BrickBugs Account</h1>
+
   <!-- Signup Form -->
-  <form id="signupForm">
-    <h2>Sign Up</h2>
-    <input type="text" id="signupUsername" placeholder="Username" maxlength="20" required>
-    <input type="password" id="signupPassword" placeholder="Password" required>
+  <form id="signupForm" autocomplete="off" spellcheck="false" novalidate>
+    <h2>Create Account</h2>
+    <input type="text" id="signupUsername" placeholder="Username" maxlength="20" required />
+    <input type="password" id="signupPassword" placeholder="Password" required />
     <button type="submit">Sign Up</button>
-    <p class="error" id="signupError"></p>
-    <p class="success" id="signupSuccess"></p>
+    <p class="message error" id="signupError"></p>
+    <p class="message success" id="signupSuccess"></p>
   </form>
 
   <!-- Login Form -->
-  <form id="loginForm">
+  <form id="loginForm" autocomplete="off" spellcheck="false" novalidate>
     <h2>Login</h2>
-    <input type="text" id="loginUsername" placeholder="Username" maxlength="20" required>
-    <input type="password" id="loginPassword" placeholder="Password" required>
+    <input type="text" id="loginUsername" placeholder="Username" maxlength="20" required />
+    <input type="password" id="loginPassword" placeholder="Password" required />
     <button type="submit">Login</button>
-    <p class="error" id="loginError"></p>
-    <p class="success" id="loginSuccess"></p>
+    <p class="message error" id="loginError"></p>
+    <p class="message success" id="loginSuccess"></p>
   </form>
 
   <script type="module">
-    // Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBhHOQUZKAoEfEbdy2hiD8PazE-i-qbY2g",
       authDomain: "cardgameproject-42b48.firebaseapp.com",
@@ -57,7 +155,7 @@
       return !pattern.test(str);
     }
 
-    // Sign Up Logic
+    // SIGNUP
     const signupForm = document.getElementById("signupForm");
     const signupUsername = document.getElementById("signupUsername");
     const signupPassword = document.getElementById("signupPassword");
@@ -92,7 +190,7 @@
       }
     });
 
-    // Login Logic
+    // LOGIN
     const loginForm = document.getElementById("loginForm");
     const loginUsername = document.getElementById("loginUsername");
     const loginPassword = document.getElementById("loginPassword");
@@ -123,5 +221,6 @@
       }
     });
   </script>
+
 </body>
 </html>
